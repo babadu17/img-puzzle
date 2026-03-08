@@ -380,3 +380,13 @@ header .compteur {
     overflow: hidden;
     height: 100vh;
 }
+
+.piece.verrouillee {
+    box-shadow: inset 0 0 0 2px gold, inset 0 0 0 3px rgba(255,180,0,0.4);
+    cursor: default;
+    z-index: 1;
+}
+
+.piece.verrouillee:hover {
+    opacity: 1;
+}
