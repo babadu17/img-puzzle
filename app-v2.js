@@ -153,9 +153,14 @@ function lancerPuzzle(puzzle) {
     page1.classList.add("hidden");
     page2.classList.remove("hidden");
 
-    // Calculer taillePiece et boardSize une seule fois
-    const maxBoard = Math.min(window.innerWidth - 40, window.innerHeight - 100, 800);
-    taillePiece = Math.max(Math.floor(maxBoard / taille), 4);
+    // Calculer taillePiece et boardSize en fonction de l'écran
+    // On soustrait les gaps (taille-1 pixels) et les marges
+    const wrapper = document.querySelector(".puzzle-wrapper");
+    const maxW = wrapper.clientWidth - 20;
+    const maxH = wrapper.clientHeight - 20;
+    const maxBoard = Math.min(maxW, maxH, 800);
+    // gap: 0px donc pas besoin de le soustraire
+    taillePiece = Math.max(Math.floor(maxBoard / taille), 2);
     boardSize   = taillePiece * taille;
 
     // Générer et mélanger la grille
