@@ -315,7 +315,7 @@ header .compteur {
 }
 
 .piece.selectionnee {
-    box-shadow: inset 0 0 0 3px rgb(255, 200, 0);
+    box-shadow: inset 0 0 0 3px rgb(0, 200, 80);
     opacity: 1;
     z-index: 2;
 }
@@ -389,4 +389,33 @@ header .compteur {
 
 .piece.verrouillee:hover {
     opacity: 1;
+}
+
+/* Groupe sélectionné — bordure bleue */
+.piece.groupe-selec {
+    box-shadow: inset 0 0 0 3px rgb(0, 140, 255), inset 0 0 0 5px rgba(0,140,255,0.25);
+    cursor: grab;
+    z-index: 2;
+}
+
+/* Flash rouge si déplacement impossible */
+.piece.erreur {
+    box-shadow: inset 0 0 0 3px red;
+    transition: box-shadow 0.1s;
+}
+
+/* Pièce appartenant à un groupe (pas encore verrouillée) */
+.piece.en-groupe {
+    box-shadow: inset 0 0 0 2px rgb(0, 140, 255);
+}
+
+/* Groupe sélectionné */
+.piece.groupe-selec {
+    box-shadow: inset 0 0 0 3px rgb(0, 140, 255), inset 0 0 8px rgba(0,140,255,0.3);
+    cursor: grab;
+}
+
+/* Flash rouge si dépôt invalide */
+.piece.erreur {
+    box-shadow: inset 0 0 0 3px red;
 }
