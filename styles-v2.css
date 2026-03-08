@@ -282,10 +282,12 @@ header .compteur {
 .puzzle-wrapper {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100vh - 50px);
     overflow: auto;
-    min-height: calc(100vh - 50px);
 }
 
 .puzzle-board {
