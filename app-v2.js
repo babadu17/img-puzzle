@@ -1,17 +1,17 @@
 // =====================
 //  SÉLECTIONS HTML
 // =====================
-const buttonPlus    = document.querySelector(".plus");
-const buttonCreer   = document.querySelector(".creer");
-const buttonAnnuler = document.querySelector(".annuler");
-const inputFichier  = document.querySelector(".fichier");
-const inputNom      = document.querySelector(".nom-puzzle");
-const popUp         = document.querySelector(".pop-up");
-const page1         = document.querySelector(".page-1");
-const page2         = document.querySelector(".page-2");
-const board         = document.querySelector(".puzzle-board");
-const titrePuzzle   = document.querySelector(".titre-puzzle");
-const compteur      = document.querySelector(".compteur");
+const buttonPlus      = document.querySelector(".plus");
+const buttonCreer     = document.querySelector(".creer");
+const buttonAnnuler   = document.querySelector(".annuler");
+const inputFichier    = document.querySelector(".fichier");
+const inputNom        = document.querySelector(".nom-puzzle");
+const popUp           = document.querySelector(".pop-up");
+const page1           = document.querySelector(".page-1");
+const page2           = document.querySelector(".page-2");
+const board           = document.querySelector(".puzzle-board");
+const titrePuzzle     = document.querySelector(".titre-puzzle");
+const compteur        = document.querySelector(".compteur");
 const victoireOverlay = document.querySelector(".victoire-overlay");
 const victoireStats   = document.querySelector(".victoire-stats");
 
@@ -19,12 +19,13 @@ const victoireStats   = document.querySelector(".victoire-stats");
 //  ÉTAT DU JEU
 // =====================
 let puzzleActuel = null;
-let grille       = [];
+let grille       = [];   // grille[posActuelle] = indexOriginal de la pièce
+let verrouille   = [];   // verrouille[posActuelle] = true/false
 let taille       = 5;
 let selection    = null;
 let nbEchanges   = 0;
-let taillePiece  = 0;  // calculé une seule fois au lancement
-let boardSize    = 0;  // calculé une seule fois au lancement
+let taillePiece  = 0;
+let boardSize    = 0;
 
 // =====================
 //  DÉMARRAGE
@@ -44,13 +45,8 @@ inputFichier.addEventListener("change", (e) => {
 // =====================
 //  POP-UP
 // =====================
-buttonPlus.addEventListener("click", () => {
-    popUp.classList.remove("hidden");
-});
-
-buttonAnnuler.addEventListener("click", () => {
-    popUp.classList.add("hidden");
-});
+buttonPlus.addEventListener("click", () => popUp.classList.remove("hidden"));
+buttonAnnuler.addEventListener("click", () => popUp.classList.add("hidden"));
 
 // =====================
 //  CRÉER UN PUZZLE
@@ -66,19 +62,15 @@ buttonCreer.addEventListener("click", () => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        const imageBase64 = e.target.result;
-
         const puzzle = {
             id: Date.now(),
             nom: nom,
-            image: imageBase64,
+            image: e.target.result,
             taille: difficulte,
             date: new Date().toLocaleDateString("fr-FR"),
         };
-
         sauvegarderPuzzle(puzzle);
         afficherPuzzles();
-
         inputFichier.value = "";
         inputNom.value = "";
         document.querySelector(".nom-fichier").textContent = "Aucun fichier choisi";
@@ -153,21 +145,17 @@ function lancerPuzzle(puzzle) {
     page1.classList.add("hidden");
     page2.classList.remove("hidden");
 
-    // Calculer taillePiece et boardSize en fonction de l'écran
-    // On soustrait les gaps (taille-1 pixels) et les marges
     const wrapper = document.querySelector(".puzzle-wrapper");
     const maxW = wrapper.clientWidth - 20;
     const maxH = wrapper.clientHeight - 20;
     const maxBoard = Math.min(maxW, maxH, 800);
-    // gap: 0px donc pas besoin de le soustraire
     taillePiece = Math.max(Math.floor(maxBoard / taille), 2);
     boardSize   = taillePiece * taille;
 
-    // Générer et mélanger la grille
-    grille = Array.from({ length: taille * taille }, (_, i) => i);
+    // Initialiser la grille et le tableau de verrouillage
+    grille     = Array.from({ length: taille * taille }, (_, i) => i);
+    verrouille = new Array(taille * taille).fill(false);
     melangerGrille();
-
-    // Créer toutes les pièces une seule fois
     initialiserBoard(puzzle.image);
 }
 
@@ -181,7 +169,6 @@ function melangerGrille() {
 // Crée les pièces DOM une seule fois
 function initialiserBoard(imageUrl) {
     board.innerHTML = "";
-
     board.style.gridTemplateColumns = `repeat(${taille}, ${taillePiece}px)`;
     board.style.width  = boardSize + "px";
     board.style.height = boardSize + "px";
@@ -193,10 +180,7 @@ function initialiserBoard(imageUrl) {
         piece.style.height          = taillePiece + "px";
         piece.style.backgroundImage = `url(${imageUrl})`;
         piece.style.backgroundSize  = `${boardSize}px ${boardSize}px`;
-
-        // Appliquer la position visuelle depuis la grille
         appliquerPosition(piece, grille[i]);
-
         piece.addEventListener("click", () => clicPiece(i));
         board.appendChild(piece);
     }
@@ -210,35 +194,128 @@ function appliquerPosition(pieceEl, indexOriginal) {
 }
 
 // =====================
+//  VERROUILLAGE
+// =====================
+
+// Vérifie si 2 pièces sont voisines ET correctement placées l'une par rapport à l'autre
+function sontVoisinesBienPlacees(posA, posB) {
+    const origA = grille[posA];
+    const origB = grille[posB];
+
+    const colPos  = posA % taille,  rowPos  = Math.floor(posA / taille);
+    const colPosB = posB % taille,  rowPosB = Math.floor(posB / taille);
+    const colOrig = origA % taille, rowOrig = Math.floor(origA / taille);
+    const colOrigB= origB % taille, rowOrigB= Math.floor(origB / taille);
+
+    // Décalage en position actuelle
+    const dCol = colPosB - colPos;
+    const dRow = rowPosB - rowPos;
+
+    // Décalage en position originale
+    const dColOrig = colOrigB - colOrig;
+    const dRowOrig = rowOrigB - rowOrig;
+
+    // Elles sont voisines si le décalage est identique dans les 2 espaces
+    return dCol === dColOrig && dRow === dRowOrig;
+}
+
+// Propage le verrouillage : trouve tout le groupe connecté autour d'un index
+function calculerGroupeVerrouille(startPos) {
+    const visited = new Set();
+    const queue   = [startPos];
+
+    while (queue.length > 0) {
+        const pos = queue.shift();
+        if (visited.has(pos)) continue;
+        visited.add(pos);
+
+        const col = pos % taille;
+        const row = Math.floor(pos / taille);
+
+        // Voisins haut/bas/gauche/droite
+        const voisins = [];
+        if (col > 0)         voisins.push(pos - 1);
+        if (col < taille - 1) voisins.push(pos + 1);
+        if (row > 0)         voisins.push(pos - taille);
+        if (row < taille - 1) voisins.push(pos + taille);
+
+        for (const v of voisins) {
+            if (!visited.has(v) && sontVoisinesBienPlacees(pos, v)) {
+                queue.push(v);
+            }
+        }
+    }
+    return visited;
+}
+
+// Après chaque échange, vérifie et verrouille les groupes formés
+function mettreAJourVerrouillage(indexA, indexB) {
+    const pieces = board.children;
+
+    // Vérifier les 2 pièces échangées et leurs voisins directs
+    const aVerifier = new Set([indexA, indexB]);
+    for (const pos of [indexA, indexB]) {
+        const col = pos % taille;
+        const row = Math.floor(pos / taille);
+        if (col > 0)          aVerifier.add(pos - 1);
+        if (col < taille - 1) aVerifier.add(pos + 1);
+        if (row > 0)          aVerifier.add(pos - taille);
+        if (row < taille - 1) aVerifier.add(pos + taille);
+    }
+
+    for (const pos of aVerifier) {
+        if (verrouille[pos]) continue;
+
+        // Une pièce seule est-elle à sa bonne place ?
+        if (grille[pos] === pos) {
+            // Calculer tout le groupe connecté
+            const groupe = calculerGroupeVerrouille(pos);
+            // Verrouiller tout le groupe
+            for (const membre of groupe) {
+                verrouille[membre] = true;
+                pieces[membre].classList.add("verrouillee");
+                pieces[membre].classList.remove("selectionnee");
+            }
+        }
+    }
+}
+
+// =====================
 //  LOGIQUE DE JEU
 // =====================
 function clicPiece(index) {
     const pieces = board.children;
 
+    // Ignorer les pièces verrouillées
+    if (verrouille[index]) return;
+
     if (selection === null) {
-        // Premier clic : sélectionner
         selection = index;
         pieces[index].classList.add("selectionnee");
 
     } else {
         if (selection === index) {
-            // Re-clic sur la même pièce : désélectionner
             pieces[index].classList.remove("selectionnee");
             selection = null;
             return;
         }
 
-        // Deuxième clic : échanger dans la grille
+        // Ignorer si la 2e pièce est verrouillée
+        if (verrouille[index]) return;
+
         pieces[selection].classList.remove("selectionnee");
 
+        // Échanger
         [grille[selection], grille[index]] = [grille[index], grille[selection]];
-
-        // Mettre à jour UNIQUEMENT les 2 pièces concernées (pas tout le board !)
         appliquerPosition(pieces[selection], grille[selection]);
         appliquerPosition(pieces[index],     grille[index]);
 
         nbEchanges++;
         compteur.textContent = `${nbEchanges} échange${nbEchanges > 1 ? "s" : ""}`;
+
+        // Vérifier les verrouillages après l'échange
+        mettreAJourVerrouillage(selection, index);
+
         selection = null;
 
         if (verifierVictoire()) {
