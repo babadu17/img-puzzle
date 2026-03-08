@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle</title>
+    <link rel="stylesheet" href="styles-v2.css">
+</head>
+<body>
+
+    <!-- PAGE 1 -->
+    <div class="page page-1">
+        <header>
+            <h1><span>🧩</span> puzzle</h1>
+            <button class="plus">+</button>
+        </header>
+        <div class="container"></div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page page-2 hidden">
+        <header>
+            <button class="retour">← Retour</button>
+            <h1 class="titre-puzzle">Nom du puzzle</h1>
+            <span class="compteur">0 échanges</span>
+        </header>
+        <div class="puzzle-wrapper">
+            <div class="puzzle-board"></div>
+        </div>
+    </div>
+
+    <!-- POP-UP création -->
+    <div class="pop-up hidden">
+        <h2>Nouveau puzzle</h2>
+        <input type="text" class="nom-puzzle" placeholder="Nom du puzzle" />
+        <label class="upload-btn">
+            Choisir une image
+            <input type="file" class="fichier" accept="image/*">
+        </label>
+        <span class="nom-fichier">Aucun fichier choisi</span>
+        <div class="difficulte-choix">
+            <label><input type="radio" name="diff" value="5" checked> 😊 Facile (5×5)</label>
+            <label><input type="radio" name="diff" value="10"> 😐 Moyen (10×10)</label>
+            <label><input type="radio" name="diff" value="20"> 😤 Difficile (20×20)</label>
+            <label><input type="radio" name="diff" value="30"> 💀 Très difficile (30×30)</label>
+        </div>
+        <button class="creer">Créer</button>
+        <button class="annuler">Annuler</button>
+    </div>
+
+    <!-- Overlay victoire -->
+    <div class="victoire-overlay hidden">
+        <div class="victoire-box">
+            <div class="victoire-emoji">🎉</div>
+            <h2>Puzzle complété !</h2>
+            <p class="victoire-stats"></p>
+            <button class="btn-rejouer">Rejouer</button>
+            <button class="btn-accueil">Retour à l'accueil</button>
+        </div>
+    </div>
+
+    <script src="app-v2.js"></script>
+</body>
+</html>
